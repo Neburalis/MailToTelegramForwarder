@@ -20,87 +20,6 @@ The bot only sends messages, it does not respond or listen.
 
 ## Installation
 
-Installation is very easy for Linux with Systemd and only needs to copy 
-and edit some files.
-
-### Prerequisites
-
-To run "mailToTelegramForwarder.py" you have to make sure Python 3.10+
-and following Python libraries are installed:
-
-- `python-telegram-bot` (>=20.3)
-- `imaplib2`
-- `beautifulsoup4` (HTML parser, used to fix broken HTML structure)
-
-#### Using uv (recommended)
-
-[uv](https://docs.astral.sh/uv/) manages the Python environment and dependencies automatically:
-
-```
-# install uv (if not already installed)
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# install dependencies and create virtual environment
-uv sync
-
-# run the script
-uv run mailToTelegramForwarder.py --config conf/mailToTelegramForwarder.conf
-```
-
-#### Using apt (Debian 13.x Trixie)
-
-**Hint**: python3-python-telegram-bot is available since Bullseye.
-```
-sudo apt install python3-python-telegram-bot python3-imaplib2 python3-bs4
-```
-
-#### Using yay (Arch / CachyOS)
-```
-yay -Su python-telegram-bot python-imaplib2 python-beautifulsoup4
-```
-
-
-#### Create dedicated system user
-
-Dedicated user is recommended for security reasons, to restrict access 
-to the minimum.
-
-```
-useradd mail2telegram
-```
-
-#### Download and place files
-```
-wget https://github.com/Neburalis/MailToTelegramForwarder/archive/master.zip
-unzip master.zip
-
-cd MailToTelegramForwarder-master
-
-# "chown" can be skipped, if no dedicated user was created
-sudo chown mail2telegram:mail2telegram mailToTelegramForwarder.py
-sudo chown mail2telegram:mail2telegram conf/mailToTelegramForwarder.conf
-
-# make script executable
-sudo chmod +x mailToTelegramForwarder.py
-
-# create application folder and link executable to default path
-sudo mkdir /opt/mailToTelegramForwarder
-sudo cp mailToTelegramForwarder.py pyproject.toml uv.lock *.md /opt/mailToTelegramForwarder/
-sudo ln -sT /opt/mailToTelegramForwarder/mailToTelegramForwarder.py /usr/local/bin/mailToTelegramForwarder
-
-# install dependencies (if using uv)
-cd /opt/mailToTelegramForwarder && sudo uv sync --no-dev
-
-# create folder for configuration files
-sudo mkdir /etc/mail-to-telegram-forwarder
-sudo cp conf/mailToTelegramForwarder.conf /etc/mail-to-telegram-forwarder/
-```
-
-You should edit `/etc/mail-to-telegram-forwarder/mailToTelegramForwarder.conf`
-now.
-```
-sudo vi /etc/mail-to-telegram-forwarder/mailToTelegramForwarder.conf
-```
 ### Command line options
 `-c`, `--config`: Configuration file. 
 
@@ -262,62 +181,45 @@ position with captions of image:
 See [configuration template](conf/mailToTelegramForwarder.conf) 
 `conf/mailToTelegramForwarder.conf` for further information.
 
-### Installing as systemd service
+### Running with Docker (recommended)
+
+Docker is the simplest way to run the service — no Python or dependency management required.
+
+#### Build the image
 ```
-sudo cp systemd/mail-to-telegram-forwarder@.service /etc/systemd/system/
-sudo systemctl daemon-reload
+docker build -t mail-to-telegram-forwarder .
 ```
 
-### Start systemd daemon
+#### Start the container
 
-Daemon can be started by configuration file, as multiple configurations
-are supported on a single server.
-
-You may enable and start the daemon, now:
+Edit your configuration file first (see [Configuration](#configuration) above), then mount it into the container:
 ```
-# start service with default configuration
-sudo systemctl start mail-to-telegram-forwarder@mailToTelegramForwarder
+docker run -d \
+  --name mail-to-telegram-forwarder \
+  --restart unless-stopped \
+  -v /path/to/mailToTelegramForwarder.conf:/config/mailToTelegramForwarder.conf:ro \
+  mail-to-telegram-forwarder
+```
 
-# check status
-sudo systemctl status mail-to-telegram-forwarder@mailToTelegramForwarder
+The configuration file is mounted read-only; credentials never become part of the image.
 
-# enable service, to start default configuration on startup
-sudo systemctl enable mail-to-telegram-forwarder@mailToTelegramForwarder
-
-# check log messages
-sudo journalctl -u mail-to-telegram-forwarder@mailToTelegramForwarder
+#### View logs
+```
+docker logs -f mail-to-telegram-forwarder
 ```
 
 ## Update
+
+### Docker
 ```
-# remove old package
-rm master.zip
-
-# get most recent code from GitHub
-wget https://github.com/Neburalis/MailToTelegramForwarder/archive/master.zip
-
-# use 'A' to replace [A]ll
-unzip master.zip
-cd MailToTelegramForwarder-master
-
-# "chown" can be skipped, if no dedicated user was created
-sudo chown mail2telegram:mail2telegram mailToTelegramForwarder.py
-sudo chown mail2telegram:mail2telegram conf/mailToTelegramForwarder.conf
-
-# make script executable
-sudo chmod +x mailToTelegramForwarder.py
-
-# copy script to installation folder
-sudo cp mailToTelegramForwarder.py *.md /opt/mailToTelegramForwarder/
-
-# compare configruation file and manually update if needed
-diff -y conf/mailToTelegramForwarder.conf /etc/mail-to-telegram-forwarder/mailToTelegramForwarder.conf
-
-# restart service
-sudo systemctl restart mail-to-telegram-forwarder@mailToTelegramForwarder
-
-# check status
-sudo systemctl status mail-to-telegram-forwarder@mailToTelegramForwarder
+docker build -t mail-to-telegram-forwarder .
+docker stop mail-to-telegram-forwarder
+docker rm mail-to-telegram-forwarder
+docker run -d \
+  --name mail-to-telegram-forwarder \
+  --restart unless-stopped \
+  -v /path/to/mailToTelegramForwarder.conf:/config/mailToTelegramForwarder.conf:ro \
+  mail-to-telegram-forwarder
 ```
 
 ## Authors
@@ -330,6 +232,8 @@ sudo systemctl status mail-to-telegram-forwarder@mailToTelegramForwarder
   [*Abandoned*]
 - **Awalon** - *Merged and enhanced Version* - 
   [@Awalon](https://github.com/awalon/MailToTelegramForwarder)
+- **Neburalis** - *Docker support, uv migration and enhancements* -
+  [@Neburalis](https://github.com/Neburalis/MailToTelegramForwarder)
 
 ## License
 

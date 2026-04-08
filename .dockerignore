@@ -1,0 +1,8 @@
+.git
+.gitignore
+systemd/
+logo/
+README.md
+LICENSE*.md
+SECURITY.md
+conf/
