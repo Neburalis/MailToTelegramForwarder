@@ -5,7 +5,8 @@ Wants=network-online.target nss-lookup.target
 Documentation=https://github.com/awalon/MailToTelegramForwarder/
 
 [Service]
-ExecStart=/usr/local/bin/mailToTelegramForwarder --config /etc/mail-to-telegram-forwarder/%i.conf
+WorkingDirectory=/opt/mailToTelegramForwarder
+ExecStart=uv run mailToTelegramForwarder.py --config /etc/mail-to-telegram-forwarder/%i.conf
 User=mail2telegram
 Restart=on-failure
 

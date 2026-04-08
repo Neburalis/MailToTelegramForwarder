@@ -25,28 +25,36 @@ and edit some files.
 
 ### Prerequisites
 
-To run "mailToTelegramForwarder.py" you have to make sure Python
-(Version 3) and following Python libraries are installed: 
+To run "mailToTelegramForwarder.py" you have to make sure Python 3.10+
+and following Python libraries are installed:
 
-`$> pip install $module_name` or `$> apt install python3-$module_name`
+- `python-telegram-bot` (>=20.3)
+- `imaplib2`
+- `beautifulsoup4` (HTML parser, used to fix broken HTML structure)
+
+#### Using uv (recommended)
+
+[uv](https://docs.astral.sh/uv/) manages the Python environment and dependencies automatically:
 
 ```
-- configparser
-- argparse
-- email
-- telegram-bot
-- imaplib2
-- beautifulsoup4 (HTML parser, used to fix broken HTML structure)
+# install uv (if not already installed)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# install dependencies and create virtual environment
+uv sync
+
+# run the script
+uv run mailToTelegramForwarder.py --config conf/mailToTelegramForwarder.conf
 ```
 
-For Debian 13.x (Trixie) these packages have to be installed:
+#### Using apt (Debian 13.x Trixie)
 
 **Hint**: python3-python-telegram-bot is available since Bullseye.
 ```
 sudo apt install python3-python-telegram-bot python3-imaplib2 python3-bs4
 ```
 
-For Arch (CachyOS) these packages have to be installed:
+#### Using yay (Arch / CachyOS)
 ```
 yay -Su python-telegram-bot python-imaplib2 python-beautifulsoup4
 ```
@@ -77,8 +85,11 @@ sudo chmod +x mailToTelegramForwarder.py
 
 # create application folder and link executable to default path
 sudo mkdir /opt/mailToTelegramForwarder
-sudo cp mailToTelegramForwarder.py *.md /opt/mailToTelegramForwarder/
+sudo cp mailToTelegramForwarder.py pyproject.toml uv.lock *.md /opt/mailToTelegramForwarder/
 sudo ln -sT /opt/mailToTelegramForwarder/mailToTelegramForwarder.py /usr/local/bin/mailToTelegramForwarder
+
+# install dependencies (if using uv)
+cd /opt/mailToTelegramForwarder && sudo uv sync --no-dev
 
 # create folder for configuration files
 sudo mkdir /etc/mail-to-telegram-forwarder

@@ -1,1 +1,2 @@
 /conf/mailToTelegramForwarder-*.conf
+.venv/

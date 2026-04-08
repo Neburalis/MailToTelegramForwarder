@@ -18,6 +18,8 @@
 
 ---
 
+        uv (recommended):
+            uv sync
         Debian:
             sudo apt install python3-python-telegram-bot python3-imaplib2 python3-bs4
         Arch:
