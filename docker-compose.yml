@@ -1,0 +1,7 @@
+services:
+  mail2telegram:
+    build: .
+    container_name: mail2telegram
+    restart: unless-stopped
+    volumes:
+      - ./conf:/config

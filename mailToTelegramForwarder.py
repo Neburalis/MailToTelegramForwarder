@@ -97,6 +97,7 @@ with warnings.catch_warnings(record=True) as w:
     from telegram import error, Message, PhotoSize, Bot, ChatFullInfo
     from telegram.request import HTTPXRequest
     from telegram.constants import ParseMode
+    from telegram.ext import Application, CommandHandler
 
     # Ignore not supported warnings
     if len(w) > 0:
@@ -652,6 +653,18 @@ class TelegramBot:
 
         return True
 
+    def build_application(self) -> 'Application':
+        """
+        [Beta] Build a telegram.ext.Application with command handlers.
+        """
+        async def start_command(update, context):
+            chat_id = update.effective_chat.id
+            await update.message.reply_text(f"Chat ID: {chat_id}")
+
+        app = Application.builder().token(self.config.tg_bot_token).build()
+        app.add_handler(CommandHandler("start", start_command))
+        return app
+
 
 class Mail:
     mailbox: typing.Optional[imaplib2.IMAP4_SSL] = None
@@ -1103,6 +1116,7 @@ async def main() -> None:
         sys.exit(2)
 
     mailbox = None
+    tg_app = None
     last_try = time.time()
     tool = Tool()
     sys_handler.tool = tool
@@ -1111,6 +1125,13 @@ async def main() -> None:
         sys_handler.mask_error_data = tool.mask_error_data
         tg_bot = TelegramBot(config)
         mailbox = Mail(config)
+
+        # [Beta] Start telegram.ext Application for command handling
+        tg_app = tg_bot.build_application()
+        await tg_app.initialize()
+        await tg_app.start()
+        await tg_app.updater.start_polling()
+        logging.info("[Beta] Telegram command polling started")
 
         # Keep polling
         while True:
@@ -1180,6 +1201,10 @@ async def main() -> None:
     finally:
         if mailbox is not None:
             mailbox.disconnect()
+        if tg_app is not None:
+            await tg_app.updater.stop()
+            await tg_app.stop()
+            await tg_app.shutdown()
         logging.info('Mail to Telegram Forwarder stopped!')
 
 
